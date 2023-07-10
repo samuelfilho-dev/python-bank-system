@@ -9,6 +9,8 @@ menu = """
     
 =>"""
 
+final = "Obrigado! por utlizar nosso sistema"
+
 erro = "[ERRO]:"
 erro_opcao = fg.red + f"{erro} Opção Não Encontrada, Por favor digite os números do menu" + fg.rs
 erro_valor_negativo = fg.red + f"{erro} Valor Negativo" + fg.rs
