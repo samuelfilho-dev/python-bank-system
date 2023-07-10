@@ -1,7 +1,7 @@
 # Sistema Bancario 🏦
 
-Um Sistema Bancario feito em Python,
-usando os principios e fudamentos da linguagem
+Um Sistema Bancário feito em Python, usando os princípios e fundamentos da linguagem
+
 
 ## Tecnologias  💻
 
