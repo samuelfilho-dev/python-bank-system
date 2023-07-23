@@ -1,8 +1,10 @@
 from sty import fg
 
-import mensagens
 import os
 import time
+
+import mensagens
+import funcoes
 
 saldo = 0
 limite = 500
@@ -14,42 +16,62 @@ while True:
     opcao = int(input(mensagens.menu))
 
     if opcao == 1:
-        valor = float(input("Valor De Deposito: "))
+        nome = input("Nome Do Usuário: ")
+        data_de_nascimento = input("Data De Nascimento (YYY-MM-DD): ")
+        cpf = input("CPF: ")
+        endereco = input(f"Endereço({mensagens.formato_endereco}): ")
 
-        if valor < 0:
-            print(mensagens.erro_valor_negativo)
+        usuario = funcoes.criar_usuario(nome, data_de_nascimento, cpf, endereco)
 
-        saldo += valor
-        extrato += fg.cyan + f"[DEPOSITO] \t R$ {valor:.2f} \n" + fg.rs
-        os.system('cls')
+        if not usuario:
+            print(mensagens.erro_usuario_cadastro)
+
+        print(f"O Usuário '{funcoes.formatar_nome_usuario(usuario[0])}' Foi Cadastrado Com Sucesso")
 
     elif opcao == 2:
-        saque = float(input("Valor De Saque: "))
 
-        if numeros_saques > LIMITE_SAQUES:
-            print(mensagens.erro_limite_saque)
-            os.system('cls')
+        cpf = input("Digite Seu CPF(Sem Caracteres): ")
 
-        if saque > saldo:
-            print(mensagens.erro_limite_saldo)
+        if cpf not in usuario:
+            print(mensagens.erro_usuario_nao_encontrado)
+        else:
+            nome_do_usuario = usuario[0]
 
-        if saque > limite:
-            print(mensagens.erro_limite_valor_saque)
-            os.system('cls')
+            conte_corrente = funcoes.criar_conte_corrente(nome_do_usuario)
 
-        saldo -= saque
-        numeros_saques += 1
-        extrato += fg.li_red + f"[SAQUE] \t R$ {saque:.2f} \n" + fg.rs
-        os.system('cls')
+            print(f"""
+                        A Conta Corrente Do Usuario '{funcoes.formatar_nome_usuario(usuario[0])}' Foi Cadastrado Com Sucesso!
+
+                        {conte_corrente[0]}
+                        {conte_corrente[1]}
+                        {funcoes.formatar_nome_usuario(nome_do_usuario)}
+                    """)
+
 
     elif opcao == 3:
-        print("######## EXTRATO ######## \n")
-        print(fg.li_red + "Não Houve realização de Movimentações \n" + fg.rs if not extrato else extrato)
-        print(fg.li_blue + f"Saldo: R$ {saldo:.2f}" + fg.rs)
-        time.sleep(3)
-        os.system('cls')
+        usuarios = funcoes.listar_usuarios()
+        print(usuarios)
 
     elif opcao == 4:
+        contas_correntes = funcoes.listar_conta_corrente()
+        print(contas_correntes)
+
+    elif opcao == 5:
+        valor = float(input("Valor De Deposito: "))
+
+        funcoes.depositar(saldo, valor, extrato)
+
+
+    elif opcao == 6:
+        valor = float(input("Valor Do Saque: "))
+
+        funcoes.sacar(saldo=saldo, valor=valor, extrato=extrato, limite=limite, numeros_saques=numeros_saques,
+                      limite_saque=LIMITE_SAQUES)
+
+    elif opcao == 7:
+        funcoes.declarar_extrato(saldo, extrato=extrato)
+
+    elif opcao == 8:
         print(mensagens.final)
         time.sleep(1)
         break
