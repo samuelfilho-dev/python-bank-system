@@ -1,7 +1,5 @@
 from sty import fg
 
-import funcoes
-
 menu = """
     
     [1]. Criar Usuario
@@ -15,7 +13,7 @@ menu = """
     
 =>"""
 
-final = "Obrigado! por utlizar nosso sistema"
+final = fg.li_blue + "Obrigado! por utlizar nosso sistema" + fg.rs
 
 formato_endereco = "logradouro-numero-bairro-cidade/UF"
 
