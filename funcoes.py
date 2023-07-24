@@ -2,59 +2,85 @@ from sty import fg
 
 import os
 import time
+import textwrap
 
 import mensagens
 
-lista_de_cpf = []
-usuarios = []
-lista_cc = []
 
-
-def criar_usuario(nome, data_de_nascimento, cpf, endereco):
-    """Cria um novo usuário.
-
+def criar_usuario(nome, data_de_nascimento, cpf, endereco, usuarios):
+    """
+    Esta função cria um novo usuário e adiciona-o à lista de usuários.
     Args:
         nome (str): O nome do usuário.
         data_de_nascimento (str): A data de nascimento do usuário.
         cpf (str): O CPF do usuário.
         endereco (str): O endereço do usuário.
-
+        usuarios (list): A lista de usuários.
     Returns:
-        list: Uma lista com as informações do usuário.
+        list: A lista de usuários atualizada.
     """
 
     # Verifica se o CPF já existe.
-    if cpf in lista_de_cpf:
-        print(mensagens.erro_cpf_existente)
-        return
+    usuario = filtrar_usuario(cpf, usuarios)
 
-    cpf = formatar_cpf(cpf)
+    if usuario:
+        # O CPF não existe, então exibe uma mensagem de erro.
+        print(mensagens.erro_usuario_nao_encontrado)
 
-    # Cria uma lista com as informações do usuário.
-    usuario = [
-        f"Nome: {nome}",
-        f"Data De Nascimento: {data_de_nascimento}",
-        cpf,
-        f"Endereço: {endereco}",
-    ]
+    # Cria um novo usuário.
+    usuario = {"nome": nome, "data_nascimento": data_de_nascimento, "cpf": formatar_cpf(cpf), "endereco": endereco}
 
-    # Adiciona a lista de CPFs.
-    lista_de_cpf.append(cpf)
-
-    # Adiciona a lista de usuários.
+    # Adiciona o usuário à lista de usuários.
     usuarios.append(usuario)
 
-    return usuario
-
-
-def listar_usuarios():
-    """Lista todos os usuários.
-
-    Returns:
-        list: Uma lista com as informações de todos os usuários.
-    """
+    # Exibe uma mensagem de confirmação.
+    print(fg.li_green + f"O Usuário '{usuario['nome']}' Foi Cadastrado Com Sucesso" + fg.rs)
 
     return usuarios
+
+
+def filtrar_usuario(cpf, usuarios):
+    """
+    Esta função filtra um usuário na lista de usuários com base no CPF.
+    Args:
+        cpf (str): O CPF do usuário.
+        usuarios (list): A lista de usuários.
+    Returns:
+        dict: O usuário encontrado, ou `None` se o usuário não for encontrado.
+    """
+
+    # Cria uma lista de usuários filtrados.
+    usuarios_filtrados = [usuario for usuario in usuarios if usuario["cpf"] == cpf]
+
+    # Retorna o primeiro usuário encontrado, ou `None` se o usuário não for encontrado.
+    return usuarios_filtrados[0] if usuarios_filtrados else None
+
+
+def listar_usuarios(usuarios):
+    """
+    Esta função lista todos os usuários na lista de usuários.
+    Args:
+        usuarios (list): A lista de usuários.
+    Returns:
+        None.
+    """
+    # Imprime uma linha de títulos.
+    print("*" * 100)
+    print(fg.li_green + "Lista de Usuários" + fg.rs)
+    print("*" * 100)
+
+    # Lista cada usuário.
+    for usuario in usuarios:
+        linha = fg.li_green + f"""
+
+        Nome:\t{usuario['nome']}
+        Data De Nascimento:\t{usuario['data_nascimento']}
+        CPF:\t{usuario['cpf']}
+        Endereço:\t{usuario['endereco']}
+
+        """ + fg.rs
+
+        print(textwrap.dedent(linha))
 
 
 def formatar_cpf(cpf):
@@ -68,87 +94,107 @@ def formatar_cpf(cpf):
     return cpf.replace(".", "").replace("-", "").replace("/", "")
 
 
-def formatar_nome_usuario(nome):
-    """Formata o nome de um usuário.
-    Args:
-        nome (str): O nome do usuário.
-    Returns:
-        str: O nome do usuário formatado.
+def criar_conta_corrente(agencia, usuarios, cpf, lista_cc):
     """
-
-    # Divide o nome em palavras.
-    palavras = nome.split(" ")
-
-    # Retorna a segunda palavra.
-    return palavras[1]
-
-
-def criar_conta_corrente(nome_do_usuario):
-    """Cria uma nova conta corrente.
+    Esta função cria uma nova conta corrente para o usuário especificado.
 
     Args:
-        nome_do_usuario (str): O nome do usuário.
+        agencia (int): O número da agência bancária.
+        usuarios (list): A lista de usuários.
+        cpf (str): O CPF do usuário.
+        lista_cc (list): A lista de números de contas correntes.
+
     Returns:
-        list: Uma lista com as informações da conta corrente.
+        dict: A conta corrente criada.
     """
 
-    # Cria uma lista com as informações da conta corrente.
-    conta_corrente = [
-        "Agência: 0001",
-        f"Conta Corrente: {formar_numero_da_conta()}",
-        f"Usuário: {nome_do_usuario.title()}",
-    ]
+    # Verifica se o usuário existe.
+    usuario = filtrar_usuario(cpf, usuarios)
 
-    lista_cc.append(conta_corrente)
+    if usuario:
+        # Cria um novo número de conta corrente.
+        numero_conta = formar_numero_da_conta(lista_cc)
 
-    return conta_corrente
+        # Cria uma nova conta corrente.
+        conta_corrente = {"agencia": agencia, "numero_conta": numero_conta, "usuario": usuario}
+
+        # Adiciona a conta corrente à lista de contas correntes.
+        lista_cc.append(conta_corrente)
+
+        # Exibe uma mensagem de confirmação.
+        print(fg.li_green + f"""
+            A Conta Corrente Do Usuario '{usuario['nome']}' Foi Cadastrado Com Sucesso!
+
+            Agencia: {agencia}
+            Conta Corrente: {numero_conta}
+            Usuario: {usuario}
+            """ + fg.rs)
+
+        return conta_corrente
+
+    print(mensagens.erro_usuario_nao_encontrado)
 
 
-def formar_numero_da_conta():
-    """Forma o número de uma conta corrente.
+def formar_numero_da_conta(lista_cc):
+    """
+    Esta função forma um novo número de conta corrente a partir da lista de números de contas correntes existentes.
+    Args:
+        lista_cc (list): A lista de números de contas correntes.
     Returns:
-        int: O número da conta corrente.
+        int: O novo número de conta corrente.
     """
 
-    # Inicializa o número da conta.
-    numero_da_conta = 0
+    # Obtém o comprimento da lista de números de contas correntes.
+    length = len(lista_cc)
 
-    # Incrementa o número da conta.
-    numero_da_conta = numero_da_conta + 1
-
-    # Retorna o número da conta.
-    return numero_da_conta
+    # Retorna o comprimento da lista + 1.
+    return length + 1
 
 
-def listar_conta_corrente():
-    """Lista todas as contas correntes.
+def listar_conta_corrente(lista_cc):
+    """
+    Esta função lista todas as contas correntes na lista de contas correntes.
+    Args:
+        lista_cc (list): A lista de contas correntes.
     Returns:
-        list: Uma lista com as informações de todas as contas correntes.
+        None.
     """
 
-    return lista_cc
+    # Imprime uma linha de títulos.
+    print("*" * 100)
+    print(fg.li_green + "Lista de Contas Correntes" + fg.rs)
+    print("*" * 100)
+
+    # Lista cada conta corrente.
+    for conta in lista_cc:
+        linha = fg.li_green + f"""
+               Agência:\t{conta['agencia']}
+               C/C:\t\t{conta['numero_conta']}
+               Titular:\t{conta['usuario']['nome']}
+           """ + fg.rs
+
+        print(textwrap.dedent(linha))
 
 
-def sacar(saldo, valor, extrato, limite, numeros_saques, limite_saque):
-    """Sacar dinheiro de uma conta corrente.
+def sacar(*, saldo, valor, extrato, limite, numeros_saques, limite_saque):
+    """
+    Esta função saca dinheiro de uma conta corrente.
 
     Args:
         saldo (float): O saldo atual da conta corrente.
         valor (float): O valor a ser sacado.
         extrato (str): O extrato da conta corrente.
-        limite (int): O limite de saque diário.
+        limite (float): O limite de saques diários.
         numeros_saques (int): O número de saques realizados no dia.
-        limite_saque (int): O limite de saques diários.
+        limite_saque (int): O número máximo de saques diários.
 
     Returns:
-       bool:
-       False se o saque não foi realizado
-       None se o saque foi realizado com sucesso,
-
+        float: O saldo atualizado após o saque.
+        str: O extrato atualizado após o saque.
     """
 
     # Verifica se o número de saques realizados no dia está dentro do limite.
-    if numeros_saques > limite_saque:
+    if numeros_saques >= limite_saque:
         print(mensagens.erro_limite_saque)
         os.system('cls')
         return False
@@ -180,9 +226,12 @@ def sacar(saldo, valor, extrato, limite, numeros_saques, limite_saque):
     print(fg.li_blue + f"Saldo: R$ {saldo:.2f}" + fg.rs)
     print(fg.li_red + extrato + fg.rs)
 
+    return saldo, extrato
 
-def depositar(saldo, valor, extrato):
-    """Depositar dinheiro em uma conta corrente.
+
+def depositar(saldo, valor, extrato, /):
+    """
+    Esta função deposita dinheiro em uma conta corrente.
 
     Args:
         saldo (float): O saldo atual da conta corrente.
@@ -190,7 +239,8 @@ def depositar(saldo, valor, extrato):
         extrato (str): O extrato da conta corrente.
 
     Returns:
-        None
+        float: O saldo atualizado com o depósito
+        str: O extrato atualizado com o depósito
     """
 
     # Verifica se o valor a ser depositado é negativo.
@@ -204,20 +254,22 @@ def depositar(saldo, valor, extrato):
     # Adiciona o depósito ao extrato da conta corrente.
     extrato += fg.cyan + f"[DEPOSITO] \t R$ {valor:.2f} \n" + fg.rs
 
+    # Limpa a tela.
     os.system('cls')
 
     # Imprime o saldo e extrato da conta corrente.
     print(fg.li_blue + f"Saldo: R$ {saldo:.2f}" + fg.rs)
     print(fg.li_red + extrato + fg.rs)
 
+    return saldo, extrato
 
-def declarar_extrato(saldo, *, extrato):
-    """Declara o extrato de uma conta corrente.
 
+def declarar_extrato(saldo, /, *, extrato):
+    """
+    Esta função declara o extrato de uma conta corrente.
     Args:
         saldo (float): O saldo atual da conta corrente.
         extrato (str): O extrato da conta corrente.
-
     Returns:
         None
     """
@@ -233,5 +285,6 @@ def declarar_extrato(saldo, *, extrato):
 
     # Imprime o saldo da conta corrente.
     print(fg.li_blue + f"Saldo: R$ {saldo:.2f}" + fg.rs)
-    time.sleep(3)
+
+    # Limpa a tela.
     os.system('cls')
