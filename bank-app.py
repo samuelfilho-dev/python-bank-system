@@ -1,58 +1,36 @@
 import os
 import time
 
-import mensagens
 import funcoes
+import mensagens
 
-saldo = 0
-limite = 500
-extrato = ""
-numeros_saques = 0
-LIMITE_SAQUES = 3
-usuarios = []
+clientes = []
 lista_cc = []
 
 while True:
     opcao = int(input(mensagens.menu))
 
     if opcao == 1:
-        nome = input("Nome Do Usuário: ")
-        data_de_nascimento = input("Data De Nascimento (YYY-MM-DD): ")
-        cpf = input("CPF: ")
-        endereco = input(f"Endereço({mensagens.formato_endereco}): ")
-
-        usuarios = funcoes.criar_usuario(nome, data_de_nascimento, cpf, endereco, usuarios)
+        clientes = funcoes.criar_cliente(clientes)
 
     elif opcao == 2:
-
-        cpf = input("Digite Seu CPF(Sem Caracteres): ")
-        AGENCIA = "0001"
-        conta_corrente = funcoes.criar_conta_corrente(AGENCIA, usuarios, cpf, lista_cc)
-        # lista_cc.append(conta_corrente)
+        numero_conta = funcoes.formar_numero_da_conta(lista_cc)
+        lista_cc = funcoes.criar_conta_corrente(numero_conta, clientes, lista_cc)
 
     elif opcao == 3:
-        funcoes.listar_usuarios(usuarios)
+        funcoes.listar_clientes(clientes)
 
     elif opcao == 4:
         funcoes.listar_conta_corrente(lista_cc)
 
     elif opcao == 5:
-        valor = float(input("Valor De Deposito: "))
-
-        saldo, extrato = funcoes.depositar(saldo, valor, extrato)
+        funcoes.depositar(clientes)
 
     elif opcao == 6:
-        valor = float(input("Valor Do Saque: "))
-
-        saldo, extrato = funcoes.sacar(saldo=saldo,
-                                       valor=valor,
-                                       extrato=extrato,
-                                       limite=limite,
-                                       numeros_saques=numeros_saques,
-                                       limite_saque=LIMITE_SAQUES)
+        funcoes.sacar(clientes)
 
     elif opcao == 7:
-        funcoes.declarar_extrato(saldo, extrato=extrato)
+        funcoes.declarar_extrato(clientes)
 
     elif opcao == 8:
         print(mensagens.final)

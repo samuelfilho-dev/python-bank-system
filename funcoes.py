@@ -1,138 +1,79 @@
+from models.PessoaFisica import PessoaFisica
+from models.ContaCorrente import ContaCorrente
+from models.Saque import Saque
+from models.Deposito import Deposito
 from sty import fg
 
 import os
-import time
 import textwrap
-
 import mensagens
 
 
-def criar_usuario(nome, data_de_nascimento, cpf, endereco, usuarios):
-    """
-    Esta função cria um novo usuário e adiciona-o à lista de usuários.
-    Args:
-        nome (str): O nome do usuário.
-        data_de_nascimento (str): A data de nascimento do usuário.
-        cpf (str): O CPF do usuário.
-        endereco (str): O endereço do usuário.
-        usuarios (list): A lista de usuários.
-    Returns:
-        list: A lista de usuários atualizada.
-    """
+def verificar_cpf(clientes):
+    cpf = input("Informe o CPF(Somente em números): ")
+    cliente = filtrar_cliente(cpf, clientes)
 
-    # Verifica se o CPF já existe.
-    usuario = filtrar_usuario(cpf, usuarios)
-
-    if usuario:
-        # O CPF não existe, então exibe uma mensagem de erro.
+    if not cliente:
         print(mensagens.erro_usuario_nao_encontrado)
+        return False
 
-    # Cria um novo usuário.
-    usuario = {"nome": nome, "data_nascimento": data_de_nascimento, "cpf": formatar_cpf(cpf), "endereco": endereco}
-
-    # Adiciona o usuário à lista de usuários.
-    usuarios.append(usuario)
-
-    # Exibe uma mensagem de confirmação.
-    print(fg.li_green + f"O Usuário '{usuario['nome']}' Foi Cadastrado Com Sucesso" + fg.rs)
-
-    return usuarios
+    return cliente
 
 
-def filtrar_usuario(cpf, usuarios):
-    """
-    Esta função filtra um usuário na lista de usuários com base no CPF.
-    Args:
-        cpf (str): O CPF do usuário.
-        usuarios (list): A lista de usuários.
-    Returns:
-        dict: O usuário encontrado, ou `None` se o usuário não for encontrado.
-    """
+def criar_cliente(clientes):
+    cpf = input("Informe o CPF(Somente em números): ")
+    cliente = filtrar_cliente(cpf, clientes)
 
-    # Cria uma lista de usuários filtrados.
-    usuarios_filtrados = [usuario for usuario in usuarios if usuario["cpf"] == cpf]
+    if cliente:
+        print(mensagens.erro_cpf_existente)
+        return
 
-    # Retorna o primeiro usuário encontrado, ou `None` se o usuário não for encontrado.
-    return usuarios_filtrados[0] if usuarios_filtrados else None
+    nome = input("Nome Do Usuário: ")
+    data_de_nascimento = input("Data De Nascimento(YYY-MM-DD): ")
+    endereco = input(f"Endereço({mensagens.formato_endereco}): ")
+
+    cliente = PessoaFisica(nome=nome, data_nascimento=data_de_nascimento, cpf=cpf, endereco=endereco)
+
+    clientes.append(cliente)
+    print(mensagens.sucesso_criacao_cliente)
+
+    return clientes
 
 
-def listar_usuarios(usuarios):
-    """
-    Esta função lista todos os usuários na lista de usuários.
-    Args:
-        usuarios (list): A lista de usuários.
-    Returns:
-        None.
-    """
+def filtrar_cliente(cpf, clientes):
+    clientes_filtrados = [cliente for cliente in clientes if cliente.cpf == cpf]
+    return clientes_filtrados[0] if clientes_filtrados else None
+
+
+def recuperar_conta_cliente(cliente):
+    if not cliente.contas:
+        print(mensagens.erro_usuario_nao_tem_conta)
+        return
+
+    return cliente.contas[0]
+
+
+def listar_clientes(clientes):
     # Imprime uma linha de títulos.
     print("*" * 100)
     print(fg.li_green + "Lista de Usuários" + fg.rs)
     print("*" * 100)
 
     # Lista cada usuário.
-    for usuario in usuarios:
-        linha = fg.li_green + f"""
-
-        Nome:\t{usuario['nome']}
-        Data De Nascimento:\t{usuario['data_nascimento']}
-        CPF:\t{usuario['cpf']}
-        Endereço:\t{usuario['endereco']}
-
-        """ + fg.rs
-
-        print(textwrap.dedent(linha))
+    for cliente in clientes:
+        print(textwrap.dedent(str(cliente)))
 
 
-def formatar_cpf(cpf):
-    """Remove os caracteres de um CPF.
-      Args:
-        cpf (str): O CPF a ser removido.
-      Returns:
-        str: O CPF sem caracteres.
-      """
+def criar_conta_corrente(numero_conta, clientes, lista_cc):
+    cliente = verificar_cpf(clientes)
 
-    return cpf.replace(".", "").replace("-", "").replace("/", "")
+    conta = ContaCorrente.nova_conta(cliente=cliente, numero=numero_conta)
+    lista_cc.append(conta)
+    cliente.contas.append(conta)
 
+    print(mensagens.sucesso_criacao_cc)
 
-def criar_conta_corrente(agencia, usuarios, cpf, lista_cc):
-    """
-    Esta função cria uma nova conta corrente para o usuário especificado.
-
-    Args:
-        agencia (int): O número da agência bancária.
-        usuarios (list): A lista de usuários.
-        cpf (str): O CPF do usuário.
-        lista_cc (list): A lista de números de contas correntes.
-
-    Returns:
-        dict: A conta corrente criada.
-    """
-
-    # Verifica se o usuário existe.
-    usuario = filtrar_usuario(cpf, usuarios)
-
-    if usuario:
-        # Cria um novo número de conta corrente.
-        numero_conta = formar_numero_da_conta(lista_cc)
-
-        # Cria uma nova conta corrente.
-        conta_corrente = {"agencia": agencia, "numero_conta": numero_conta, "usuario": usuario}
-
-        # Adiciona a conta corrente à lista de contas correntes.
-        lista_cc.append(conta_corrente)
-
-        # Exibe uma mensagem de confirmação.
-        print(fg.li_green + f"""
-            A Conta Corrente Do Usuario '{usuario['nome']}' Foi Cadastrado Com Sucesso!
-
-            Agencia: {agencia}
-            Conta Corrente: {numero_conta}
-            Usuario: {usuario}
-            """ + fg.rs)
-
-        return conta_corrente
-
-    print(mensagens.erro_usuario_nao_encontrado)
+    return lista_cc
 
 
 def formar_numero_da_conta(lista_cc):
@@ -167,124 +108,61 @@ def listar_conta_corrente(lista_cc):
 
     # Lista cada conta corrente.
     for conta in lista_cc:
-        linha = fg.li_green + f"""
-               Agência:\t{conta['agencia']}
-               C/C:\t\t{conta['numero_conta']}
-               Titular:\t{conta['usuario']['nome']}
-           """ + fg.rs
-
-        print(textwrap.dedent(linha))
+        print(textwrap.dedent(str(conta)))
 
 
-def sacar(*, saldo, valor, extrato, limite, numeros_saques, limite_saque):
-    """
-    Esta função saca dinheiro de uma conta corrente.
+def sacar(clientes):
+    cliente = verificar_cpf(clientes)
 
-    Args:
-        saldo (float): O saldo atual da conta corrente.
-        valor (float): O valor a ser sacado.
-        extrato (str): O extrato da conta corrente.
-        limite (float): O limite de saques diários.
-        numeros_saques (int): O número de saques realizados no dia.
-        limite_saque (int): O número máximo de saques diários.
+    valor = float(input("Informe o Valor Do Saque: "))
+    transacao = Saque(valor)
 
-    Returns:
-        float: O saldo atualizado após o saque.
-        str: O extrato atualizado após o saque.
-    """
-
-    # Verifica se o número de saques realizados no dia está dentro do limite.
-    if numeros_saques >= limite_saque:
-        print(mensagens.erro_limite_saque)
-        os.system('cls')
-        return False
-
-    # Verifica se o valor a ser sacado é maior que o saldo.
-    if valor > saldo:
-        print(mensagens.erro_limite_saldo)
-        os.system('cls')
-        return False
-
-    # Verifica se o valor a ser sacado é maior que o limite.
-    if valor > limite:
-        print(mensagens.erro_limite_valor_saque)
-        os.system('cls')
-        return False
-
-    # Atualiza o saldo da conta corrente.
-    saldo -= valor
-
-    # Atualiza o número de saques realizados no dia.
-    numeros_saques += 1
-
-    # Adiciona o saque ao extrato da conta corrente.
-    extrato += fg.li_red + f"[SAQUE] \t R$ {valor:.2f} \n" + fg.rs
-
-    os.system('cls')
-
-    # Imprime o saldo e o extrato da conta corrente.
-    print(fg.li_blue + f"Saldo: R$ {saldo:.2f}" + fg.rs)
-    print(fg.li_red + extrato + fg.rs)
-
-    return saldo, extrato
-
-
-def depositar(saldo, valor, extrato, /):
-    """
-    Esta função deposita dinheiro em uma conta corrente.
-
-    Args:
-        saldo (float): O saldo atual da conta corrente.
-        valor (float): O valor a ser depositado.
-        extrato (str): O extrato da conta corrente.
-
-    Returns:
-        float: O saldo atualizado com o depósito
-        str: O extrato atualizado com o depósito
-    """
-
-    # Verifica se o valor a ser depositado é negativo.
-    if valor < 0:
-        print(mensagens.erro_valor_negativo)
+    conta = recuperar_conta_cliente(cliente)
+    if not conta:
+        print(mensagens.erro_usuario_nao_tem_conta)
         return
 
-    # Atualiza o saldo da conta corrente.
-    saldo += valor
-
-    # Adiciona o depósito ao extrato da conta corrente.
-    extrato += fg.cyan + f"[DEPOSITO] \t R$ {valor:.2f} \n" + fg.rs
-
-    # Limpa a tela.
-    os.system('cls')
-
-    # Imprime o saldo e extrato da conta corrente.
-    print(fg.li_blue + f"Saldo: R$ {saldo:.2f}" + fg.rs)
-    print(fg.li_red + extrato + fg.rs)
-
-    return saldo, extrato
+    cliente.realizar_transacao(conta, transacao)
 
 
-def declarar_extrato(saldo, /, *, extrato):
-    """
-    Esta função declara o extrato de uma conta corrente.
-    Args:
-        saldo (float): O saldo atual da conta corrente.
-        extrato (str): O extrato da conta corrente.
-    Returns:
-        None
-    """
+def depositar(clientes):
+    cliente = verificar_cpf(clientes)
+
+    valor = float(input("Qual é Valor Do Deposito: "))
+    transacao = Deposito(valor)
+
+    conta = recuperar_conta_cliente(cliente)
+
+    if not conta:
+        return
+
+    cliente.realizar_transacao(conta, transacao)
+
+
+def declarar_extrato(clientes):
+    extrato = ""
+
+    cliente = verificar_cpf(clientes)
+
+    conta = recuperar_conta_cliente(cliente)
+    if not conta:
+        return
+
+    transacoes = conta.historico.transacoes
 
     # Imprime o cabeçalho do extrato.
     print("######## EXTRATO ######## \n")
 
     # Imprime o extrato, se houver.
-    if extrato:
-        print(fg.li_red + extrato + fg.rs)
-    else:
+    if not transacoes:
         print(fg.li_red + "Não Houve realização de Movimentações \n" + fg.rs)
 
-    # Imprime o saldo da conta corrente.
-    print(fg.li_blue + f"Saldo: R$ {saldo:.2f}" + fg.rs)
+    else:
+        for transacao in transacoes:
+            extrato += (fg.li_green + f"\n{transacao['tipo']}\n\t R$ {transacao['valor']:.2f} \n\t {transacao['data']}"
+                        + fg.rs)
+
+    print(extrato)
 
     # Limpa a tela.
     os.system('cls')
